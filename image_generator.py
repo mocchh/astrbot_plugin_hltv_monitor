@@ -3,15 +3,37 @@ from typing import List, Dict
 import cairosvg
 import os
 from datetime import datetime, timedelta
+import base64
+
+
+def _embed_image_base64(image_path: str) -> str | None:
+    """
+    一个辅助函数，用于读取图片文件并将其编码为 Base64 数据 URI。
+    """
+    if not image_path or not os.path.exists(image_path):
+        return None
+    try:
+        with open(image_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode()
+        ext = os.path.splitext(image_path)[1].lower()
+        mime_type = "image/png"
+        if ext == ".jpg" or ext == ".jpeg":
+            mime_type = "image/jpeg"
+        elif ext == ".svg":
+            mime_type = "image/svg+xml"
+        return f"data:{mime_type};base64,{encoded_string}"
+    except Exception:
+        return None
 
 
 def generate_match_image(matches_list: List[Dict], output_path: str = "matches.png") -> str:
     """
     将比赛信息列表绘制成一张包含日期分组的卡片式 PNG 图片。
-    此版本采用全新的居中对阵布局，突出队伍信息。
+    此版本采用居中对阵布局，并能根据队名自动从 './data/' 文件夹加载 Logo。
 
     :param matches_list: 包含比赛信息的列表。
-                         格式: [{'datetime': dt, 'event': str, 'stars': int, 'team1': str, 'team2': str, 'best_of': int}]
+                         格式: [{'datetime': dt, 'event': str, 'stars': int,
+                                 'team1': str, 'team2': str, 'best_of': int}]
     :param output_path: 最终输出的 PNG 图片路径。
     :return: 生成的 PNG 图片的绝对路径。
     """
@@ -31,8 +53,10 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     WIDTH = 800
     TITLE_Y_SPACE = 100
     DATE_HEADER_Y_SPACE = 70
-    CARD_HEIGHT = 140
+    CARD_HEIGHT = 180
     CARD_GAP = 20
+    LOGO_SIZE = (64, 64)
+    DATA_DIR = "data"
 
     FONT_FAMILY = "'Noto Sans CJK SC', 'Helvetica', 'Arial', 'sans-serif'"
 
@@ -100,13 +124,17 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         team1_name = match_data.get('team1', 'TBA')
         team2_name = match_data.get('team2', 'TBA')
         time_info = match_data['datetime'].strftime('%H:%M')
-        best_of_info = str(match_data.get('best_of', '1')).upper()
+        best_of_info = f"BO{match_data.get('best_of', 1)}"
+
+        team1_logo_path = os.path.join(DATA_DIR, f"{team1_name}.png")
+        team2_logo_path = os.path.join(DATA_DIR, f"{team2_name}.png")
 
         card_stroke = "none"
-        card_stroke_width = "0"
         if match_data.get('stars', 0) == 5:
             card_stroke = "url(#goldBorderGradient)"
             card_stroke_width = "2"
+        else:
+            card_stroke_width = "0"
 
         dwg.add(dwg.rect(
             insert=(PADDING, y_pos),
@@ -120,41 +148,39 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         card_center_x = WIDTH / 2
         card_top_y = y_pos
 
-        dwg.add(dwg.text(
-            event_info,
-            insert=(card_center_x, card_top_y + 35),
-            font_family=FONT_FAMILY, font_size='18px', fill=TEXT_COLOR, text_anchor="middle"
-        ))
+        dwg.add(dwg.text(event_info, insert=(card_center_x, card_top_y + 30), font_family=FONT_FAMILY, font_size='16px',
+                         fill=TEXT_COLOR, text_anchor="middle"))
 
-        dwg.add(dwg.text(
-            team1_name,
-            insert=(PADDING + 50, card_top_y + 95),
-            font_family=FONT_FAMILY, font_size='24px', font_weight="bold", fill=TEXT_COLOR, text_anchor="start"
-        ))
+        card_content_width = WIDTH - 2 * PADDING
+        team1_center_x = PADDING + card_content_width * 0.22
+        team2_center_x = WIDTH - PADDING - card_content_width * 0.22
 
-        dwg.add(dwg.text(
-            team2_name,
-            insert=(WIDTH - PADDING - 50, card_top_y + 95),
-            font_family=FONT_FAMILY, font_size='24px', font_weight="bold", fill=TEXT_COLOR, text_anchor="end"
-        ))
+        logo_y = card_top_y + 45
+        team_name_y = card_top_y + CARD_HEIGHT - 35
 
-        dwg.add(dwg.text(
-            time_info,
-            insert=(card_center_x, card_top_y + 80),
-            font_family=FONT_FAMILY, font_size='22px', font_weight="bold", fill=TITLE_COLOR, text_anchor="middle"
-        ))
+        team1_logo_data = _embed_image_base64(team1_logo_path)
+        if team1_logo_data:
+            logo1_x = team1_center_x - (LOGO_SIZE[0] / 2)
+            dwg.add(dwg.image(href=team1_logo_data, insert=(logo1_x, logo_y), size=LOGO_SIZE))
 
-        dwg.add(dwg.text(
-            best_of_info,
-            insert=(card_center_x, card_top_y + 105),
-            font_family=FONT_FAMILY, font_size='16px', fill=TIME_COLOR, text_anchor="middle"
-        ))
+        team2_logo_data = _embed_image_base64(team2_logo_path)
+        if team2_logo_data:
+            logo2_x = team2_center_x - (LOGO_SIZE[0] / 2)
+            dwg.add(dwg.image(href=team2_logo_data, insert=(logo2_x, logo_y), size=LOGO_SIZE))
 
-        dwg.add(dwg.text(
-            stars_text,
-            insert=(card_center_x, card_top_y + 125),
-            font_family=FONT_FAMILY, font_size='14px', fill=STAR_COLOR, text_anchor="middle"
-        ))
+        dwg.add(dwg.text(team1_name, insert=(team1_center_x, team_name_y), font_family=FONT_FAMILY, font_size='24px',
+                         font_weight="bold", fill=TEXT_COLOR, text_anchor="middle"))
+        dwg.add(dwg.text(team2_name, insert=(team2_center_x, team_name_y), font_family=FONT_FAMILY, font_size='24px',
+                         font_weight="bold", fill=TEXT_COLOR, text_anchor="middle"))
+
+        dwg.add(dwg.text(time_info, insert=(card_center_x, card_top_y + 85), font_family=FONT_FAMILY, font_size='22px',
+                         font_weight="bold", fill=TITLE_COLOR, text_anchor="middle"))
+        dwg.add(
+            dwg.text(best_of_info, insert=(card_center_x, card_top_y + 110), font_family=FONT_FAMILY, font_size='16px',
+                     fill=TIME_COLOR, text_anchor="middle"))
+        dwg.add(
+            dwg.text(stars_text, insert=(card_center_x, card_top_y + 130), font_family=FONT_FAMILY, font_size='14px',
+                     fill=STAR_COLOR, text_anchor="middle"))
 
         y_pos += CARD_HEIGHT + CARD_GAP
 

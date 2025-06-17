@@ -8,11 +8,7 @@ from datetime import datetime
 def generate_match_image(matches_list: List[Dict], output_path: str = "matches.png") -> str:
     """
     将比赛信息列表绘制成一张包含日期分组的卡片式 PNG 图片。
-
-    该函数整合了两种设计思路：
-    1. 使用独立的、有背景的卡片来展示每场比赛，视觉更清晰。
-    2. 按日期对比赛进行分组，并为每个日期添加标题头。
-    3. 最终输出为 PNG 格式的图片文件。
+    此版本包含了多项视觉美化功能，如渐变、字体优化等。
 
     :param matches_list: 包含比赛信息的列表。
                          格式: [{'datetime': dt, 'event': str, 'stars': int, 'team1': str, 'team2': str}]
@@ -21,23 +17,27 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     """
     # --- 1. 主题与布局常量 ---
     # 颜色
-    BG_COLOR = '#f4f4f8'  # 轻微偏冷的灰色背景
-    CARD_BG_COLOR = '#ffffff'  # 卡片背景
-    TITLE_COLOR = '#1a1a1a'  # 主标题颜色
-    DATE_COLOR = '#333333'  # 日期标题颜色
-    TEXT_COLOR = '#4a4a4a'  # 主要文本颜色
-    TIME_COLOR = '#6a6a6a'  # 时间文本颜色
-    LINE_COLOR = '#e0e0e0'  # 分割线颜色
-    STAR_COLOR = '#ff8c00'  # 星星颜色
+    BG_COLOR = '#f4f4f8'
+    TITLE_COLOR = '#1a1a1a'
+    DATE_COLOR = '#333333'
+    TEXT_COLOR = '#4a4a4a'
+    TIME_COLOR = '#6a6a6a'
+    STAR_COLOR = '#ff8c00'
+    # 美化新增颜色
+    CARD_BG_COLOR_START = '#ffffff'
+    CARD_BG_COLOR_END = '#fdfdfd'  # 卡片渐变结束色，非常细微
+    LINE_GRADIENT_CENTER_COLOR = '#dcdcdc'
+    LINE_GRADIENT_EDGE_COLOR = BG_COLOR  # 边缘与背景色相同，实现淡出效果
 
     # 布局
     PADDING = 40
     WIDTH = 800
     LINE_HEIGHT_SMALL = 30
-    TITLE_Y_SPACE = 100  # 顶部标题区域高度
-    DATE_HEADER_Y_SPACE = 70  # 日期标题区域高度
+    TITLE_Y_SPACE = 100
+    DATE_HEADER_Y_SPACE = 70
     CARD_HEIGHT = (LINE_HEIGHT_SMALL * 3) + 20
-    CARD_GAP = 20  # 卡片之间的垂直间距
+    CARD_GAP = 20
+    CARD_CONTENT_PADDING = 25  # 卡片内部内容左侧留白
 
     # 字体
     FONT_FAMILY = "'Noto Sans CJK SC', 'Helvetica', 'Arial', 'sans-serif'"
@@ -49,10 +49,9 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     }
 
     # --- 2. 预计算总高度 ---
-    # 这是确保画布大小正确的关键一步
     total_height = PADDING + TITLE_Y_SPACE
     if not matches_list:
-        total_height += 100  # 为"暂无比赛"信息留出空间
+        total_height += 100
     else:
         last_processed_date = None
         for match in matches_list:
@@ -61,11 +60,28 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
                 total_height += DATE_HEADER_Y_SPACE
                 last_processed_date = current_date
             total_height += CARD_HEIGHT + CARD_GAP
-    total_height += PADDING  # 底部留白
+    total_height += PADDING
 
     # --- 3. 开始绘制 SVG ---
     temp_svg_path = "temp_matches.svg"
     dwg = svgwrite.Drawing(temp_svg_path, size=(f'{WIDTH}px', f'{total_height}px'))
+
+    # 定义渐变效果
+    defs = dwg.defs
+    # 卡片背景渐变
+    card_gradient = defs.add(svgwrite.gradients.LinearGradient(
+        id='cardGradient', start=(0, '0%'), end=(0, '100%')
+    ))
+    card_gradient.add_stop_color(offset='0%', color=CARD_BG_COLOR_START)
+    card_gradient.add_stop_color(offset='100%', color=CARD_BG_COLOR_END)
+
+    # 分割线渐变
+    line_gradient = defs.add(svgwrite.gradients.LinearGradient(
+        id='lineGradient', start=('0%', 0), end=('100%', 0)
+    ))
+    line_gradient.add_stop_color(offset='0%', color=LINE_GRADIENT_EDGE_COLOR, opacity=0)
+    line_gradient.add_stop_color(offset='50%', color=LINE_GRADIENT_CENTER_COLOR)
+    line_gradient.add_stop_color(offset='100%', color=LINE_GRADIENT_EDGE_COLOR, opacity=0)
 
     # 绘制背景
     dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), fill=BG_COLOR))
@@ -82,7 +98,7 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     ))
     y_pos += TITLE_Y_SPACE
 
-    # 如果没有比赛数据
+    # 空状态
     if not matches_list:
         dwg.add(dwg.text(
             "暂无即将开始的比赛",
@@ -96,10 +112,10 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     for match_data in matches_list:
         current_date = match_data['datetime'].date()
 
-        # 绘制新的日期标题
+        # 绘制日期标题
         if current_date != last_processed_date:
-            # 分割线
-            dwg.add(dwg.line(start=(PADDING, y_pos), end=(WIDTH - PADDING, y_pos), stroke=LINE_COLOR, stroke_width=1.5))
+            # 使用渐变矩形作为分割线
+            dwg.add(dwg.rect(insert=(PADDING, y_pos), size=(WIDTH - 2 * PADDING, 1.5), fill="url(#lineGradient)"))
 
             english_day = match_data['datetime'].strftime('%A')
             chinese_day = CHINESE_WEEKDAYS.get(english_day, english_day)
@@ -113,41 +129,46 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
             y_pos += DATE_HEADER_Y_SPACE
             last_processed_date = current_date
 
-        # vvvvvv 修改部分 vvvvvv
-        # 准备卡片内文本 (移除了"赛事:"和"对阵:"前缀)
+        # 准备文本
         stars_text = '★' * match_data.get('stars', 0)
         event_info = f"{match_data.get('event', '未知赛事')}"
-        teams_info = f"{match_data.get('team1', 'TBA')} vs {match_data.get('team2', 'TBA')}"
+        team1 = match_data.get('team1', 'TBA')
+        team2 = match_data.get('team2', 'TBA')
         time_info = f"时间: {match_data['datetime'].strftime('%H:%M')}"
-        # ^^^^^^ 修改部分 ^^^^^^
 
-        # 绘制卡片背景
+        # 绘制卡片背景 (使用渐变)
         dwg.add(dwg.rect(
             insert=(PADDING, y_pos),
             size=(WIDTH - 2 * PADDING, CARD_HEIGHT),
-            rx=10, ry=10, fill=CARD_BG_COLOR
+            rx=10, ry=10,
+            fill="url(#cardGradient)"
         ))
 
-        card_content_y = y_pos + LINE_HEIGHT_SMALL  # 卡片内容起始 y
+        card_content_y = y_pos + LINE_HEIGHT_SMALL
+        card_left_margin = PADDING + CARD_CONTENT_PADDING  # 统一的卡片内容左侧基线
 
-        # vvvvvv 修改部分 vvvvvv
-        # 绘制卡片内容 (调整了布局)
+        # 绘制卡片内容
         # 第一行: 赛事 和 星星
-        dwg.add(dwg.text(event_info, insert=(PADDING + 20, card_content_y), font_family=FONT_FAMILY, font_size='18px',
-                         font_weight="bold", fill=TEXT_COLOR))
-        dwg.add(dwg.text(stars_text, insert=(WIDTH - PADDING - 20, card_content_y), font_family=FONT_FAMILY,
-                         font_size='18px', fill=STAR_COLOR, text_anchor="end"))
+        dwg.add(
+            dwg.text(event_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
+                     font_weight="bold", fill=TEXT_COLOR))
+        dwg.add(dwg.text(stars_text, insert=(WIDTH - PADDING - CARD_CONTENT_PADDING, card_content_y),
+                         font_family=FONT_FAMILY, font_size='18px', fill=STAR_COLOR, text_anchor="end"))
 
-        # 第二行: 对阵
+        # 第二行: 对阵 (使用 tspan 实现队名加粗)
         card_content_y += LINE_HEIGHT_SMALL
-        dwg.add(dwg.text(teams_info, insert=(PADDING + 20, card_content_y), font_family=FONT_FAMILY, font_size='18px',
-                         fill=TEXT_COLOR))
+        teams_line = dwg.text("", insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
+                              fill=TEXT_COLOR)
+        teams_line.add(dwg.tspan(team1, font_weight="bold"))
+        teams_line.add(dwg.tspan(" vs ", font_weight="normal", fill=TIME_COLOR))  # 'vs' 使用较淡的颜色
+        teams_line.add(dwg.tspan(team2, font_weight="bold"))
+        dwg.add(teams_line)
 
         # 第三行: 时间
         card_content_y += LINE_HEIGHT_SMALL
-        dwg.add(dwg.text(time_info, insert=(PADDING + 20, card_content_y), font_family=FONT_FAMILY, font_size='16px',
-                         fill=TIME_COLOR))
-        # ^^^^^^ 修改部分 ^^^^^^
+        dwg.add(
+            dwg.text(time_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='16px',
+                     fill=TIME_COLOR))
 
         y_pos += CARD_HEIGHT + CARD_GAP
 

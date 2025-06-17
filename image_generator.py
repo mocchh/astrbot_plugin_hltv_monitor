@@ -132,8 +132,10 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         # 准备文本
         stars_text = '★' * match_data.get('stars', 0)
         event_info = f"{match_data.get('event', '未知赛事')}"
-        team1 = match_data.get('team1', 'TBA')
-        team2 = match_data.get('team2', 'TBA')
+        # vvvvvv 回退部分 vvvvvv
+        # 将 tspan 方案回退为简单的单行文本
+        teams_info = f"{match_data.get('team1', 'TBA')} vs {match_data.get('team2', 'TBA')}"
+        # ^^^^^^ 回退部分 ^^^^^^
         time_info = f"时间: {match_data['datetime'].strftime('%H:%M')}"
 
         # 绘制卡片背景 (使用渐变)
@@ -155,14 +157,13 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         dwg.add(dwg.text(stars_text, insert=(WIDTH - PADDING - CARD_CONTENT_PADDING, card_content_y),
                          font_family=FONT_FAMILY, font_size='18px', fill=STAR_COLOR, text_anchor="end"))
 
-        # 第二行: 对阵 (使用 tspan 实现队名加粗)
+        # vvvvvv 回退部分 vvvvvv
+        # 第二行: 对阵
         card_content_y += LINE_HEIGHT_SMALL
-        teams_line = dwg.text("", insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
-                              fill=TEXT_COLOR)
-        teams_line.add(dwg.tspan(team1, font_weight="bold"))
-        teams_line.add(dwg.tspan(" vs ", font_weight="normal", fill=TIME_COLOR))  # 'vs' 使用较淡的颜色
-        teams_line.add(dwg.tspan(team2, font_weight="bold"))
-        dwg.add(teams_line)
+        dwg.add(
+            dwg.text(teams_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
+                     fill=TEXT_COLOR))
+        # ^^^^^^ 回退部分 ^^^^^^
 
         # 第三行: 时间
         card_content_y += LINE_HEIGHT_SMALL

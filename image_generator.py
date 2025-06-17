@@ -100,7 +100,7 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         team1_name = match_data.get('team1', 'TBA')
         team2_name = match_data.get('team2', 'TBA')
         time_info = match_data['datetime'].strftime('%H:%M')
-        best_of_info = f"BO{match_data.get('best_of', 1)}"
+        best_of_info = str(match_data.get('best_of', '1')).upper()
 
         card_stroke = "none"
         card_stroke_width = "0"

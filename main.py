@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
     "HLTV_Monitor",
     "MO",
     "hltv比赛监控插件",
-    "1.1.1",
+    "1.1.2",
     "https://github.com/mocchh/hltv_-monitor"
 )
 class HLTV_Monitor(Star):

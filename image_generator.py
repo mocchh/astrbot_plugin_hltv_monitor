@@ -2,12 +2,19 @@ import svgwrite
 from typing import List, Dict
 import cairosvg
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 def generate_match_image(matches_list: List[Dict], output_path: str = "matches.png") -> str:
-    # --- 1. 主题与布局常量 ---
-    # 颜色
+    """
+    将比赛信息列表绘制成一张包含日期分组的卡片式 PNG 图片。
+    此版本采用全新的居中对阵布局，突出队伍信息。
+
+    :param matches_list: 包含比赛信息的列表。
+                         格式: [{'datetime': dt, 'event': str, 'stars': int, 'team1': str, 'team2': str, 'best_of': int}]
+    :param output_path: 最终输出的 PNG 图片路径。
+    :return: 生成的 PNG 图片的绝对路径。
+    """
     BG_COLOR = '#f4f4f8'
     TITLE_COLOR = '#1a1a1a'
     DATE_COLOR = '#333333'
@@ -17,30 +24,23 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     CARD_BG_COLOR = '#ffffff'
     LINE_GRADIENT_CENTER_COLOR = '#dcdcdc'
     LINE_GRADIENT_EDGE_COLOR = BG_COLOR
-    # 定义金色渐变色
     GOLD_COLOR_LIGHT = '#FCE570'
     GOLD_COLOR_DARK = '#D9A441'
 
-    # 布局
     PADDING = 40
     WIDTH = 800
-    LINE_HEIGHT_SMALL = 30
     TITLE_Y_SPACE = 100
     DATE_HEADER_Y_SPACE = 70
-    CARD_HEIGHT = (LINE_HEIGHT_SMALL * 3) + 20
+    CARD_HEIGHT = 140
     CARD_GAP = 20
-    CARD_CONTENT_PADDING = 25
 
-    # 字体
     FONT_FAMILY = "'Noto Sans CJK SC', 'Helvetica', 'Arial', 'sans-serif'"
 
-    # 星期映射
     CHINESE_WEEKDAYS = {
         'Monday': '周一', 'Tuesday': '周二', 'Wednesday': '周三',
         'Thursday': '周四', 'Friday': '周五', 'Saturday': '周六', 'Sunday': '周日'
     }
 
-    # --- 2. 预计算总高度 ---
     total_height = PADDING + TITLE_Y_SPACE
     if not matches_list:
         total_height += 100
@@ -54,29 +54,22 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
             total_height += CARD_HEIGHT + CARD_GAP
     total_height += PADDING
 
-    # --- 3. 开始绘制 SVG ---
     temp_svg_path = "temp_matches.svg"
     dwg = svgwrite.Drawing(temp_svg_path, size=(f'{WIDTH}px', f'{total_height}px'))
 
-    # 定义渐变
     defs = dwg.defs
-    # 分割线渐变
     line_gradient = defs.add(svgwrite.gradients.LinearGradient(id='lineGradient', start=('0%', 0), end=('100%', 0)))
     line_gradient.add_stop_color(offset='0%', color=LINE_GRADIENT_EDGE_COLOR, opacity=0)
     line_gradient.add_stop_color(offset='50%', color=LINE_GRADIENT_CENTER_COLOR)
     line_gradient.add_stop_color(offset='100%', color=LINE_GRADIENT_EDGE_COLOR, opacity=0)
-
-    # 定义金色边框渐变
     gold_gradient = defs.add(
         svgwrite.gradients.LinearGradient(id='goldBorderGradient', start=('0%', '0%'), end=('100%', '100%')))
     gold_gradient.add_stop_color(offset='0%', color=GOLD_COLOR_LIGHT)
     gold_gradient.add_stop_color(offset='50%', color=GOLD_COLOR_DARK)
     gold_gradient.add_stop_color(offset='100%', color=GOLD_COLOR_LIGHT)
 
-    # 绘制背景
     dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), fill=BG_COLOR))
 
-    # --- 4. 绘制内容 ---
     y_pos = PADDING
 
     dwg.add(dwg.text("近期赛事", insert=(WIDTH / 2, y_pos + 45), font_family=FONT_FAMILY, font_size='32px',
@@ -102,23 +95,19 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
             y_pos += DATE_HEADER_Y_SPACE
             last_processed_date = current_date
 
-        # 准备文本
         stars_text = '★' * match_data.get('stars', 0)
         event_info = match_data.get('event', '未知赛事')
-        teams_info = f"{match_data.get('team1', 'TBA')} vs {match_data.get('team2', 'TBA')}"
-        time_info = f"时间: {match_data['datetime'].strftime('%H:%M')}"
+        team1_name = match_data.get('team1', 'TBA')
+        team2_name = match_data.get('team2', 'TBA')
+        time_info = match_data['datetime'].strftime('%H:%M')
+        best_of_info = f"BO{match_data.get('best_of', 1)}"
 
-        best_of_info = str(match_data.get('best_of', '1')).upper()
-
-
-        # 根据星级动态设置边框
         card_stroke = "none"
         card_stroke_width = "0"
         if match_data.get('stars', 0) == 5:
             card_stroke = "url(#goldBorderGradient)"
             card_stroke_width = "2"
 
-        # 绘制卡片背景
         dwg.add(dwg.rect(
             insert=(PADDING, y_pos),
             size=(WIDTH - 2 * PADDING, CARD_HEIGHT),
@@ -128,38 +117,47 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
             stroke_width=card_stroke_width
         ))
 
-        # 绘制三行布局
-        card_content_y = y_pos + LINE_HEIGHT_SMALL
-        card_left_margin = PADDING + CARD_CONTENT_PADDING
-        card_right_margin = WIDTH - PADDING - CARD_CONTENT_PADDING
+        card_center_x = WIDTH / 2
+        card_top_y = y_pos
 
-        # --- 绘制第一行 ---
-        dwg.add(
-            dwg.text(event_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
-                     font_weight="bold", fill=TEXT_COLOR))
-        dwg.add(
-            dwg.text(stars_text, insert=(card_right_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
-                     fill=STAR_COLOR, text_anchor="end"))
+        dwg.add(dwg.text(
+            event_info,
+            insert=(card_center_x, card_top_y + 35),
+            font_family=FONT_FAMILY, font_size='18px', fill=TEXT_COLOR, text_anchor="middle"
+        ))
 
-        # --- 绘制第二行 ---
-        card_content_y += LINE_HEIGHT_SMALL
-        dwg.add(
-            dwg.text(teams_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
-                     fill=TEXT_COLOR))
-        # vvvvvv 新增: 绘制 BO 信息 vvvvvv
-        dwg.add(dwg.text(best_of_info, insert=(card_right_margin, card_content_y), font_family=FONT_FAMILY,
-                         font_size='16px', fill=TIME_COLOR, text_anchor="end"))
-        # ^^^^^^ 新增 ^^^^^^
+        dwg.add(dwg.text(
+            team1_name,
+            insert=(PADDING + 50, card_top_y + 95),
+            font_family=FONT_FAMILY, font_size='24px', font_weight="bold", fill=TEXT_COLOR, text_anchor="start"
+        ))
 
-        # --- 绘制第三行 ---
-        card_content_y += LINE_HEIGHT_SMALL
-        dwg.add(
-            dwg.text(time_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='16px',
-                     fill=TIME_COLOR))
+        dwg.add(dwg.text(
+            team2_name,
+            insert=(WIDTH - PADDING - 50, card_top_y + 95),
+            font_family=FONT_FAMILY, font_size='24px', font_weight="bold", fill=TEXT_COLOR, text_anchor="end"
+        ))
+
+        dwg.add(dwg.text(
+            time_info,
+            insert=(card_center_x, card_top_y + 80),
+            font_family=FONT_FAMILY, font_size='22px', font_weight="bold", fill=TITLE_COLOR, text_anchor="middle"
+        ))
+
+        dwg.add(dwg.text(
+            best_of_info,
+            insert=(card_center_x, card_top_y + 105),
+            font_family=FONT_FAMILY, font_size='16px', fill=TIME_COLOR, text_anchor="middle"
+        ))
+
+        dwg.add(dwg.text(
+            stars_text,
+            insert=(card_center_x, card_top_y + 125),
+            font_family=FONT_FAMILY, font_size='14px', fill=STAR_COLOR, text_anchor="middle"
+        ))
 
         y_pos += CARD_HEIGHT + CARD_GAP
 
-    # --- 5. 保存并转换为 PNG ---
     try:
         dwg.save()
         cairosvg.svg2png(url=temp_svg_path, write_to=output_path)

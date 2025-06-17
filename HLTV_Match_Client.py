@@ -53,12 +53,16 @@ async def get_high_star_matches_from_url(url: str) -> List[Dict]:
                 except ValueError:
                     continue
 
+                meta_tag = match.select_one('.match-meta')
+                best_of = meta_tag.text.strip() if meta_tag else "未知"
+
                 all_matches.append({
                     'datetime': match_datetime,
                     'event': event_name,
                     'stars': lit_stars,
                     'team1': team1,
-                    'team2': team2
+                    'team2': team2,
+                    'best_of' : best_of
                 })
 
         if not all_matches:

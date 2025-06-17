@@ -8,10 +8,10 @@ from datetime import datetime
 def generate_match_image(matches_list: List[Dict], output_path: str = "matches.png") -> str:
     """
     将比赛信息列表绘制成一张包含日期分组的卡片式 PNG 图片。
-    此版本为五星比赛的边框添加了渐变金色高亮效果。
+    此版本为五星比赛的边框添加了渐变金色高亮效果，并新增了 BO 信息显示。
 
     :param matches_list: 包含比赛信息的列表。
-                         格式: [{'datetime': dt, 'event': str, 'stars': int, 'team1': str, 'team2': str}]
+                         格式: [{'datetime': dt, 'event': str, 'stars': int, 'team1': str, 'team2': str, 'best_of': int}]
     :param output_path: 最终输出的 PNG 图片路径。
     :return: 生成的 PNG 图片的绝对路径。
     """
@@ -26,10 +26,9 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     CARD_BG_COLOR = '#ffffff'
     LINE_GRADIENT_CENTER_COLOR = '#dcdcdc'
     LINE_GRADIENT_EDGE_COLOR = BG_COLOR
-    # vvvvvv 新增: 定义金色渐变色 vvvvvv
+    # 定义金色渐变色
     GOLD_COLOR_LIGHT = '#FCE570'
     GOLD_COLOR_DARK = '#D9A441'
-    # ^^^^^^ 新增 ^^^^^^
 
     # 布局
     PADDING = 40
@@ -76,13 +75,12 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     line_gradient.add_stop_color(offset='50%', color=LINE_GRADIENT_CENTER_COLOR)
     line_gradient.add_stop_color(offset='100%', color=LINE_GRADIENT_EDGE_COLOR, opacity=0)
 
-    # vvvvvv 新增: 定义金色边框渐变 vvvvvv
+    # 定义金色边框渐变
     gold_gradient = defs.add(
         svgwrite.gradients.LinearGradient(id='goldBorderGradient', start=('0%', '0%'), end=('100%', '100%')))
     gold_gradient.add_stop_color(offset='0%', color=GOLD_COLOR_LIGHT)
     gold_gradient.add_stop_color(offset='50%', color=GOLD_COLOR_DARK)
     gold_gradient.add_stop_color(offset='100%', color=GOLD_COLOR_LIGHT)
-    # ^^^^^^ 新增 ^^^^^^
 
     # 绘制背景
     dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), fill=BG_COLOR))
@@ -118,14 +116,16 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         event_info = match_data.get('event', '未知赛事')
         teams_info = f"{match_data.get('team1', 'TBA')} vs {match_data.get('team2', 'TBA')}"
         time_info = f"时间: {match_data['datetime'].strftime('%H:%M')}"
+        # vvvvvv 新增: 准备 BO 信息 vvvvvv
+        best_of_info = f"BO{match_data.get('best_of', 1)}"
+        # ^^^^^^ 新增 ^^^^^^
 
-        # vvvvvv 修改: 根据星级动态设置边框 vvvvvv
+        # 根据星级动态设置边框
         card_stroke = "none"
         card_stroke_width = "0"
         if match_data.get('stars', 0) == 5:
             card_stroke = "url(#goldBorderGradient)"
             card_stroke_width = "2"
-        # ^^^^^^ 修改 ^^^^^^
 
         # 绘制卡片背景
         dwg.add(dwg.rect(
@@ -140,19 +140,25 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         # 绘制三行布局
         card_content_y = y_pos + LINE_HEIGHT_SMALL
         card_left_margin = PADDING + CARD_CONTENT_PADDING
+        card_right_margin = WIDTH - PADDING - CARD_CONTENT_PADDING
 
         # --- 绘制第一行 ---
         dwg.add(
             dwg.text(event_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
                      font_weight="bold", fill=TEXT_COLOR))
-        dwg.add(dwg.text(stars_text, insert=(WIDTH - PADDING - CARD_CONTENT_PADDING, card_content_y),
-                         font_family=FONT_FAMILY, font_size='18px', fill=STAR_COLOR, text_anchor="end"))
+        dwg.add(
+            dwg.text(stars_text, insert=(card_right_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
+                     fill=STAR_COLOR, text_anchor="end"))
 
         # --- 绘制第二行 ---
         card_content_y += LINE_HEIGHT_SMALL
         dwg.add(
             dwg.text(teams_info, insert=(card_left_margin, card_content_y), font_family=FONT_FAMILY, font_size='18px',
                      fill=TEXT_COLOR))
+        # vvvvvv 新增: 绘制 BO 信息 vvvvvv
+        dwg.add(dwg.text(best_of_info, insert=(card_right_margin, card_content_y), font_family=FONT_FAMILY,
+                         font_size='16px', fill=TIME_COLOR, text_anchor="end"))
+        # ^^^^^^ 新增 ^^^^^^
 
         # --- 绘制第三行 ---
         card_content_y += LINE_HEIGHT_SMALL

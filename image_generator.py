@@ -113,11 +113,13 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
             y_pos += DATE_HEADER_Y_SPACE
             last_processed_date = current_date
 
-        # 准备卡片内文本
+        # vvvvvv 修改部分 vvvvvv
+        # 准备卡片内文本 (移除了"赛事:"和"对阵:"前缀)
         stars_text = '★' * match_data.get('stars', 0)
         event_info = f"{match_data.get('event', '未知赛事')}"
         teams_info = f"{match_data.get('team1', 'TBA')} vs {match_data.get('team2', 'TBA')}"
         time_info = f"时间: {match_data['datetime'].strftime('%H:%M')}"
+        # ^^^^^^ 修改部分 ^^^^^^
 
         # 绘制卡片背景
         dwg.add(dwg.rect(
@@ -128,19 +130,24 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
 
         card_content_y = y_pos + LINE_HEIGHT_SMALL  # 卡片内容起始 y
 
-        # 绘制卡片内容
+        # vvvvvv 修改部分 vvvvvv
+        # 绘制卡片内容 (调整了布局)
+        # 第一行: 赛事 和 星星
         dwg.add(dwg.text(event_info, insert=(PADDING + 20, card_content_y), font_family=FONT_FAMILY, font_size='18px',
                          font_weight="bold", fill=TEXT_COLOR))
         dwg.add(dwg.text(stars_text, insert=(WIDTH - PADDING - 20, card_content_y), font_family=FONT_FAMILY,
                          font_size='18px', fill=STAR_COLOR, text_anchor="end"))
 
+        # 第二行: 对阵
         card_content_y += LINE_HEIGHT_SMALL
         dwg.add(dwg.text(teams_info, insert=(PADDING + 20, card_content_y), font_family=FONT_FAMILY, font_size='18px',
                          fill=TEXT_COLOR))
 
+        # 第三行: 时间
         card_content_y += LINE_HEIGHT_SMALL
         dwg.add(dwg.text(time_info, insert=(PADDING + 20, card_content_y), font_family=FONT_FAMILY, font_size='16px',
                          fill=TIME_COLOR))
+        # ^^^^^^ 修改部分 ^^^^^^
 
         y_pos += CARD_HEIGHT + CARD_GAP
 

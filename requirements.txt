@@ -1,0 +1,6 @@
+cloudscraper
+bs4
+astrbot
+httpx
+svgwrite
+cairosvg

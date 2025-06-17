@@ -6,15 +6,6 @@ from datetime import datetime
 
 
 def generate_match_image(matches_list: List[Dict], output_path: str = "matches.png") -> str:
-    """
-    将比赛信息列表绘制成一张包含日期分组的卡片式 PNG 图片。
-    此版本为五星比赛的边框添加了渐变金色高亮效果，并新增了 BO 信息显示。
-
-    :param matches_list: 包含比赛信息的列表。
-                         格式: [{'datetime': dt, 'event': str, 'stars': int, 'team1': str, 'team2': str, 'best_of': int}]
-    :param output_path: 最终输出的 PNG 图片路径。
-    :return: 生成的 PNG 图片的绝对路径。
-    """
     # --- 1. 主题与布局常量 ---
     # 颜色
     BG_COLOR = '#f4f4f8'
@@ -116,9 +107,9 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         event_info = match_data.get('event', '未知赛事')
         teams_info = f"{match_data.get('team1', 'TBA')} vs {match_data.get('team2', 'TBA')}"
         time_info = f"时间: {match_data['datetime'].strftime('%H:%M')}"
-        # vvvvvv 新增: 准备 BO 信息 vvvvvv
-        best_of_info = f"BO{match_data.get('best_of', 1)}"
-        # ^^^^^^ 新增 ^^^^^^
+
+        best_of_info = str(match_data.get('best_of', '1')).upper()
+
 
         # 根据星级动态设置边框
         card_stroke = "none"

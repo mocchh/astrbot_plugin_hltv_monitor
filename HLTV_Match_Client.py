@@ -44,8 +44,8 @@ async def get_high_star_matches_from_url(url: str) -> List[Dict]:
 
                 teams = match.select('.match-teamname')
                 time_tag = match.select_one('.match-time')
-                team1 = teams[0].text.strip() if len(teams) > 0 else "待定"
-                team2 = teams[1].text.strip() if len(teams) > 1 else "待定"
+                team1 = teams[0].text.strip() if len(teams) > 0 else "TBD"
+                team2 = teams[1].text.strip() if len(teams) > 1 else "TBD"
                 match_time_str = time_tag.text.strip() if time_tag else "00:00"
 
                 try:

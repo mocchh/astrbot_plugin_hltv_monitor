@@ -56,7 +56,12 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     CARD_HEIGHT = 180
     CARD_GAP = 20
     LOGO_SIZE = (64, 64)
-    DATA_DIR = "./data/"
+
+    # 1. 获取脚本文件所在的绝对目录
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    # 2. 将脚本目录与 'data' 文件夹名拼接起来，形成一个绝对路径
+    DATA_DIR = os.path.join(SCRIPT_DIR, 'data')
+
 
     FONT_FAMILY = "'Noto Sans CJK SC', 'Helvetica', 'Arial', 'sans-serif'"
 

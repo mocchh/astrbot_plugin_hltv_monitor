@@ -56,7 +56,7 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     CARD_HEIGHT = 180
     CARD_GAP = 20
     LOGO_SIZE = (64, 64)
-    DATA_DIR = "data"
+    DATA_DIR = "./data/"
 
     FONT_FAMILY = "'Noto Sans CJK SC', 'Helvetica', 'Arial', 'sans-serif'"
 
@@ -124,7 +124,7 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         team1_name = match_data.get('team1', 'TBA')
         team2_name = match_data.get('team2', 'TBA')
         time_info = match_data['datetime'].strftime('%H:%M')
-        best_of_info = f"BO{match_data.get('best_of', 1)}"
+        best_of_info = str(match_data.get('best_of', '1')).upper()
 
         team1_logo_path = os.path.join(DATA_DIR, f"{team1_name}.png")
         team2_logo_path = os.path.join(DATA_DIR, f"{team2_name}.png")

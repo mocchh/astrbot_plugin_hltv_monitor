@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from astrbot.api.event import MessageChain, filter, AstrMessageEvent
 from astrbot.api.star import register, Star
@@ -39,3 +40,16 @@ class HLTV_Monitor(Star):
             return
 
         yield event.image_result("./matches.png")
+
+    @filter.command("hltv_on")
+    async def show_hltv(self ,event : AstrMessageEvent):
+        url = "http://49.4.115.149:8080/latest_matches.html"
+        all_matches = await get_high_star_matches_from_url(url)
+        image_path = generate_match_image(all_matches)
+        logger.info(f"图片生成成功，路径: {image_path}")
+
+        umo = event.unified_msg_origin
+        await self.context.send_message(umo, MessageChain().message("HLTV比赛监控已开启，10秒后开始获取数据..."))
+        img = MessageChain().file_image(image_path)
+        await asyncio.sleep(10)
+        await self.context.send_message(event.unified_msg_origin,img)

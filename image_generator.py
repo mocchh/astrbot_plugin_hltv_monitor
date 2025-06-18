@@ -178,13 +178,13 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
         dwg.add(dwg.text(team2_name, insert=(team2_center_x, team_name_y), font_family=FONT_FAMILY, font_size='24px',
                          font_weight="bold", fill=TEXT_COLOR, text_anchor="middle"))
 
-        dwg.add(dwg.text(time_info, insert=(card_center_x, card_top_y + 85), font_family=FONT_FAMILY, font_size='22px',
+        dwg.add(dwg.text(time_info, insert=(card_center_x, card_top_y + 90), font_family=FONT_FAMILY, font_size='28px',
                          font_weight="bold", fill=TITLE_COLOR, text_anchor="middle"))
         dwg.add(
-            dwg.text(best_of_info, insert=(card_center_x, card_top_y + 110), font_family=FONT_FAMILY, font_size='16px',
+            dwg.text(best_of_info, insert=(card_center_x, card_top_y + 120), font_family=FONT_FAMILY, font_size='16px',
                      fill=TIME_COLOR, text_anchor="middle"))
         dwg.add(
-            dwg.text(stars_text, insert=(card_center_x, card_top_y + 130), font_family=FONT_FAMILY, font_size='14px',
+            dwg.text(stars_text, insert=(card_center_x, card_top_y + 140), font_family=FONT_FAMILY, font_size='14px',
                      fill=STAR_COLOR, text_anchor="middle"))
 
         y_pos += CARD_HEIGHT + CARD_GAP

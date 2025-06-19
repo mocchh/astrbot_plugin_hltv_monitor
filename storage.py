@@ -2,7 +2,7 @@ from astrbot.api import logger
 import json
 import os
 
-# 用于存储HLTV比赛订阅者信息的文件
+# 存储HLTV比赛订阅者信息的
 SUBSCRIPTION_FILE = "data/hltv_monitor_subscriptions.json"
 
 

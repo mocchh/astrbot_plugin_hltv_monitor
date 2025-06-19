@@ -1,13 +1,12 @@
-from astrbot.api import logger
 import os
+
+from astrbot.api import logger
 from astrbot.api.event import MessageChain
 
-# 从您的项目导入任务相关的模块
-# 请确保这些文件与您的插件在正确的路径下，以便导入
 from .HLTV_Match_Client import get_high_star_matches_from_url
 from .image_generator import generate_match_image
 
-# 比赛信息源 URL
+# HLTV比赛数据
 MATCHES_URL = "http://49.4.115.149:8080/latest_matches.html"
 
 

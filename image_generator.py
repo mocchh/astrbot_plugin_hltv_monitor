@@ -63,7 +63,7 @@ def generate_match_image(matches_list: List[Dict], output_path: str = "matches.p
     DATA_DIR = os.path.join(SCRIPT_DIR, 'data')
 
 
-    FONT_FAMILY = "'Noto Sans CJK SC', 'Helvetica', 'Arial', 'sans-serif'"
+    FONT_FAMILY = "'Noto Sans CJK SC"
 
     CHINESE_WEEKDAYS = {
         'Monday': '周一', 'Tuesday': '周二', 'Wednesday': '周三',

@@ -4,3 +4,4 @@ astrbot
 httpx
 svgwrite
 cairosvg
+apscheduler

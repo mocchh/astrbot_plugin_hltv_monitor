@@ -1,4 +1,4 @@
-import logging
+from astrbot.api import logger
 import os
 from astrbot.api.event import MessageChain
 
@@ -7,8 +7,6 @@ from astrbot.api.event import MessageChain
 from .HLTV_Match_Client import get_high_star_matches_from_url
 from .image_generator import generate_match_image
 
-# --- 全局配置 ---
-logger = logging.getLogger(__name__)
 # 比赛信息源 URL
 MATCHES_URL = "http://49.4.115.149:8080/latest_matches.html"
 
@@ -24,9 +22,7 @@ async def get_report_message_chain() -> MessageChain:
         image_path = generate_match_image(all_matches)
         logger.info(f"[HLTV任务] 比赛图片生成成功，路径: {image_path}")
 
-        # 使用 file:/// 协议来指定本地文件的绝对路径
-        absolute_image_path = os.path.abspath(image_path)
-        return MessageChain().message("这是为您生成的HLTV比赛预告：").file_image(f"file:///{absolute_image_path}")
+        return MessageChain().message("这是为您生成的HLTV比赛预告：").file_image("./matches.png")
 
     except Exception as e:
         logger.error(f"[HLTV任务] 在获取数据或生成图片时发生错误: {e}")

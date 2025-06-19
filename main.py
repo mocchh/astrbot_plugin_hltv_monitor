@@ -1,4 +1,4 @@
-import logging
+from astrbot.api import logger
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 # 导入 AstrBot 相关的库
@@ -10,8 +10,6 @@ from AstrBot.astrbot.core.star import Context
 # 假设 storage.py 和 task.py 与此文件在同一目录下
 from .storage import load_subscriptions, save_subscriptions
 from .task import get_report_message_chain
-
-logger = logging.getLogger(__name__)
 
 
 @register(

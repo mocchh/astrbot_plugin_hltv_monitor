@@ -1,9 +1,7 @@
-import logging
+from astrbot.api import logger
 import json
 import os
 
-# --- 全局配置 ---
-logger = logging.getLogger(__name__)
 # 用于存储HLTV比赛订阅者信息的文件
 SUBSCRIPTION_FILE = "data/hltv_monitor_subscriptions.json"
 
@@ -31,7 +29,7 @@ def save_subscriptions(subscriptions: set):
     """
     try:
         with open(SUBSCRIPTION_FILE, 'w', encoding='utf-8') as f:
-            # json不能直接序列化set，需要先转为list
+            # json转为list
             json.dump(list(subscriptions), f, indent=4)
     except IOError as e:
         logger.error(f"[HLTV存储] 保存订阅文件失败: {e}")

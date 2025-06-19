@@ -87,7 +87,7 @@ class HLTV_Monitor(Star):
         else:
             await self.context.send_message(umo, MessageChain().message("您还没有订阅过HLTV每日报告哦。"))
 
-    @filter.permission_type(filter.PermissionTypeFilter.ADMIN)
+    @filter.permission_type(filter.PermissionType.ADMIN)
     @filter.command_group("sub")
     def sub(self):
         pass

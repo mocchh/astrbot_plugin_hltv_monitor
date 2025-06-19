@@ -10,10 +10,10 @@ from .task import get_report_message_chain
 
 
 @register(
-    "HLTV_Monitor_Fixed",
-    "HMF",
-    "修正后的HLTV比赛监控插件",
-    "3.1.0",
+    "HLTV_Monitor",
+    "MO",
+    "HLTV比赛监控插件",
+    "1.1.0",
     "https://github.com/mocchh/hltv_-monitor"
 )
 class HLTV_Monitor(Star):
@@ -27,8 +27,8 @@ class HLTV_Monitor(Star):
         self.scheduler.add_job(
             self.send_scheduled_report,
             'cron',
-            hour=8,
-            minute=0,
+            hour=18,
+            minute=45,
             id="hltv_daily_report_job",
             replace_existing=True
         )

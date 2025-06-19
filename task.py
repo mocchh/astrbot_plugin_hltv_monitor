@@ -26,7 +26,7 @@ async def get_report_message_chain() -> MessageChain:
 
         # 使用 file:/// 协议来指定本地文件的绝对路径
         absolute_image_path = os.path.abspath(image_path)
-        return MessageChain().message("这是为您生成的HLTV比赛预告：").image(f"file:///{absolute_image_path}")
+        return MessageChain().message("这是为您生成的HLTV比赛预告：").file_image(f"file:///{absolute_image_path}")
 
     except Exception as e:
         logger.error(f"[HLTV任务] 在获取数据或生成图片时发生错误: {e}")

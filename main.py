@@ -87,10 +87,11 @@ class HLTV_Monitor(Star):
         else:
             await self.context.send_message(umo, MessageChain().message("您还没有订阅过HLTV每日报告哦。"))
 
-    @filter.permission_type(filter.PermissionType.ADMIN)
+
     @filter.command_group("sub")
     def sub(self):
         pass
+    @filter.permission_type(filter.PermissionType.ADMIN)
     @sub.command("change")
     async def change_sub_time(self, event: AstrMessageEvent,h: int, m: int):
         """处理用户更改订阅发送时间的请求。"""

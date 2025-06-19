@@ -4,6 +4,7 @@ import os
 
 # 存储HLTV比赛订阅者信息的
 SUBSCRIPTION_FILE = "data/hltv_monitor_subscriptions.json"
+SCHEDULE_CONFIG_FILE = "data/hltv_schedule_config.json"
 
 
 def load_subscriptions() -> set:
@@ -34,3 +35,27 @@ def save_subscriptions(subscriptions: set):
     except IOError as e:
         logger.error(f"[HLTV存储] 保存订阅文件失败: {e}")
 
+
+def load_schedule_time() -> dict:
+    """
+    从JSON文件中加载定时任务的时间。
+    如果文件不存在或加载失败，返回默认时间（早上8点）。
+    """
+    os.makedirs(os.path.dirname(SCHEDULE_CONFIG_FILE), exist_ok=True)
+    default_time = {'hour': 8, 'minute': 0}
+    try:
+        if os.path.exists(SCHEDULE_CONFIG_FILE):
+            with open(SCHEDULE_CONFIG_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except (IOError, json.JSONDecodeError) as e:
+        logger.error(f"[HLTV存储] 加载定时任务时间配置失败: {e}")
+    return default_time
+
+
+def save_schedule_time(time_config: dict):
+    """将新的定时任务时间保存到JSON文件。"""
+    try:
+        with open(SCHEDULE_CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(time_config, f, indent=4)
+    except IOError as e:
+        logger.error(f"[HLTV存储] 保存定时任务时间配置失败: {e}")
